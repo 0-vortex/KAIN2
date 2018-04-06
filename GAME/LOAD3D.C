@@ -12,6 +12,10 @@ void LOAD_InitCd()
 
 void LOAD_CdSeekCallback(unsigned char intr, unsigned char* result)
 {
+	if (loadStatus.waitingForSeek)
+	{
+		loadStatus.waitingForSeek = 0;
+	}
 }
 
 void LOAD_CdDataReady()
