@@ -1,7 +1,10 @@
 #include "LOAD3D.H"
-
+#include "G2TYPES.H"
 #include <LIBETC.H>
 #include <LIBCD.H>
+#include <STDLIB.H>
+
+struct LoadStatus loadStatus;
 
 void LOAD_InitCd()
 {
@@ -20,10 +23,29 @@ void LOAD_CdSeekCallback(unsigned char intr, unsigned char* result)
 
 void LOAD_CdDataReady()
 {
+	if (loadStatus.currentSector > loadStatus.currentQueueFile->blocks)
+	{
+		loadStatus.currentQueueFile->bufferFlags |= 0x1;
+	}
 }
 
 void LOAD_CdReadReady(unsigned char intr, unsigned char* result)
 {
+	if (loadStatus.waitingForData != NULL)
+	{
+		if ((intr & 0xFF) == 1)
+		{
+			if (loadStatus.currentSector < loadStatus.currentQueueFile->blocks)
+			{
+				CdGetSector((void*)loadStatus.currentQueueFile->dest[loadStatus.currentSector++ << 9], 1 << 9);
+
+				if (loadStatus.currentSector > loadStatus.currentQueueFile->blocks)
+				{
+					CdControlF(9, NULL);
+				}
+			}
+		}
+	}
 }
 
 void LOAD_UpdateCheckSum(struct FileAccessInfo* currentQueueFile, long sectors)
