@@ -1,7 +1,9 @@
 #include "LOAD3D.H"
 #include "G2TYPES.H"
-#include <LIBETC.H>
+
 #include <LIBCD.H>
+#include <LIBETC.H>
+#include <LIBGPU.H>
 #include <STDLIB.H>
 
 struct LoadStatus loadStatus;
@@ -49,9 +51,47 @@ void LOAD_CdReadReady(unsigned char intr, unsigned char* result)
 }
 
 void LOAD_UpdateCheckSum(struct FileAccessInfo* currentQueueFile, long sectors)
-{ // line 2, offset 0x8003773c
-    long i; // $a2
-} // line 23, offset 0x800377c8
+{
+	long i;
+
+	if (currentQueueFile->checksumType == 1)
+	{
+		i = 0;
+		if ((sectors << 9) <= 0)
+		{
+			return;
+		}
+
+		++i;
+
+		//loc_8003775C
+		while (i < sectors)
+		{
+			loadStatus.checksum += *loadStatus.checkAddr;
+			loadStatus.checkAddr++;
+			i++;
+		}
+	}//loc_8003778C
+	else if (currentQueueFile->checksumType == 2)
+	{
+		i = 0;
+
+		if (sectors <= 0)
+		{
+			return;
+		}
+
+		++i;
+
+		//loc_800377A0
+		while (i < sectors)
+		{
+			loadStatus.checksum += *loadStatus.checkAddr;
+			loadStatus.checkAddr += 512;
+			i++;
+		}
+	}
+}
 /*
  * Offset 0x800377D0
  * C:\kain2\game\LOAD3D.C (line 489)
@@ -123,7 +163,7 @@ long /*$ra*/ LOAD_CdReadFromBigFile(long fileOffset /*$s1*/, unsigned long *load
  */
 void /*$ra*/ LOAD_InitCdLoader(char *bigFileName /*$s0*/, char *voiceFileName /*$a1*/)
 { // line 1, offset 0x80037ef4
-    struct CdlFILE fp; // stack offset -48
+    CdlFILE fp; // stack offset -48
     long i; // $a0
     long fileId; // $a0
     long sizeOfContents; // $s0
@@ -240,7 +280,7 @@ long /*$ra*/ LOAD_DoesFileExist(char *fileName /*$a0*/)
  */
 void /*$ra*/ LOAD_LoadTIM(long *addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$s2*/, long clut_x /*$a3*/, long clut_y /*stack 16*/)
 { // line 1, offset 0x80038768
-    struct RECT rect; // stack offset -24
+    RECT rect; // stack offset -24
 } // line 18, offset 0x800387c8
 /*
  * Offset 0x80038818
@@ -250,7 +290,7 @@ void /*$ra*/ LOAD_LoadTIM(long *addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$
  */
 void /*$ra*/ LOAD_LoadTIM2(long *addr /*$a1*/, long x_pos /*$a1*/, long y_pos /*$a2*/, long width /*$a3*/, long height /*stack 16*/)
 { // line 1, offset 0x80038818
-    struct RECT rect; // stack offset -16
+    RECT rect; // stack offset -16
 } // line 1, offset 0x80038818
 /*
  * Offset 0x80038860
