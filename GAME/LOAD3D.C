@@ -1,6 +1,8 @@
 #include "LOAD3D.H"
+
 #include "G2TYPES.H"
 
+#include <SYS\TYPES.H>
 #include <LIBCD.H>
 #include <LIBETC.H>
 #include <LIBGPU.H>
@@ -154,6 +156,7 @@ long /*$ra*/ LOAD_CdReadFromBigFile(long fileOffset /*$s1*/, unsigned long *load
 { // line 1, offset 0x80037df4
     struct FileAccessInfo *currentQueueReq; // $s0
     long oldQueueReqIndex; // $s0
+	return 0;
 } // line 13, offset 0x80037e68
 /*
  * Offset 0x80037EF4
@@ -185,6 +188,8 @@ long * /*$ra*/ LOAD_ReadFile(char *fileName /*$a0*/, unsigned char memType /*$s0
     long compressedLength; // $s4
     char *finalDest; // $s0
     struct BigFileFileInfo *fileInfo; // $s2
+
+	return NULL;
 } // line 23, offset 0x80038158
 /*
  * Offset 0x800381E0
@@ -200,6 +205,8 @@ long * /*$ra*/ LOAD_SetupNonBlockingReadFile(char *fileName /*$a0*/, unsigned ch
     long compressed; // $a2
     long compressedLength; // $t0
     struct BigFileFileInfo *fileInfo; // $a3
+
+	return NULL;
 } // line 44, offset 0x800382bc
 /*
  * Offset 0x800382D8
@@ -207,9 +214,13 @@ long * /*$ra*/ LOAD_SetupNonBlockingReadFile(char *fileName /*$a0*/, unsigned ch
  * Stack frame base $sp, size 40
  * Saved registers at offset -4: s0 ra
  */
-long /*$ra*/ LOAD_NonBlockingReadFile(struct NonBlockLoadEntry *loadEntry /*$s0*/)
-{ // line 1, offset 0x800382d8
-} // line 1, offset 0x800382d8
+long LOAD_NonBlockingReadFile(struct NonBlockLoadEntry* loadEntry)
+{
+	///loadEntry->finalDest = MEMPACK_Malloc(loadEntry->mallocedSize, loadEntry->memType);
+	loadEntry->loadAddr = &loadEntry->finalDest[((loadEntry->mallocedSize >> 11) - loadEntry->compressedLength) << 11];
+	return LOAD_CdReadFromBigFile(loadEntry->filePos, loadEntry->loadAddr, loadEntry->finalDest, loadEntry->compressedLength, loadEntry->checksumType, loadEntry->checksum, loadEntry->compressed);
+}
+
 /*
  * Offset 0x80038360
  * C:\kain2\game\LOAD3D.C (line 1059)
@@ -220,6 +231,7 @@ long /*$ra*/ LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry *loadEntry /*$s1*/)
 { // line 1, offset 0x80038360
     struct FileAccessInfo *currentQueueReq; // $s0
     long oldQueueReqIndex; // $s0
+	return 0;
 } // line 13, offset 0x800383bc
 /*
  * Offset 0x800384A0
@@ -230,6 +242,7 @@ long /*$ra*/ LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry *loadEntry /*$s1*/)
 int /*$ra*/ LOAD_IsFileLoading(long fileId /*$s0*/)
 { // line 1, offset 0x800384a0
     long loopFlag; // $v0
+	return 0;
 } // line 28, offset 0x80038534
 /*
  * Offset 0x80038544
@@ -248,6 +261,7 @@ long /*$ra*/ LOAD_HashName(char *string /*stack 0*/)
     long endPos; // $fp
     long i; // $s0
     char *pos; // $s3
+	return 0;
 } // line 41, offset 0x8003864c
 /*
  * Offset 0x80038694
@@ -259,6 +273,7 @@ long /*$ra*/ LOAD_GetBigFileFileIndex(char *fileName /*$a0*/)
 { // line 1, offset 0x80038694
     long hash; // $a2
     long bigFileIndex; // $v1
+	return 0;
 } // line 17, offset 0x800386e0
 /*
  * Offset 0x800386F0
@@ -271,6 +286,7 @@ long /*$ra*/ LOAD_DoesFileExist(char *fileName /*$a0*/)
     long hash; // $a2
     long bigFileIndex; // $v1
     long result; // $s0
+	return 0;
 } // line 18, offset 0x80038754
 /*
  * Offset 0x80038768
@@ -282,16 +298,21 @@ void /*$ra*/ LOAD_LoadTIM(long *addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$
 { // line 1, offset 0x80038768
     RECT rect; // stack offset -24
 } // line 18, offset 0x800387c8
-/*
- * Offset 0x80038818
- * C:\kain2\game\LOAD3D.C (line 1276)
- * Stack frame base $sp, size 32
- * Saved registers at offset -8: ra
- */
-void /*$ra*/ LOAD_LoadTIM2(long *addr /*$a1*/, long x_pos /*$a1*/, long y_pos /*$a2*/, long width /*$a3*/, long height /*stack 16*/)
-{ // line 1, offset 0x80038818
-    RECT rect; // stack offset -16
-} // line 1, offset 0x80038818
+
+void LOAD_LoadTIM2(long* addr, long x_pos, long y_pos, long width, long height)
+{
+	RECT rect;
+
+	rect.x = x_pos;
+	addr = &addr[2];
+	rect.y = y_pos;
+	rect.w = ((short*)addr)[4];
+	addr = &addr[3];
+	rect.h = ((short*)addr)[5];
+	LoadImage(&rect, (u_long*)addr);
+	DrawSync(0);
+}
+
 /*
  * Offset 0x80038860
  * C:\kain2\game\LOAD3D.C (line 1314)
@@ -306,6 +327,8 @@ void * /*$ra*/ LOAD_RelocBinaryData(long *data /*$s0*/)
     long fileSize; // $v0
     struct RedirectList redirectListX; // stack offset -32
     struct RedirectList *redirectList; // $a0
+
+	return NULL;
 } // line 21, offset 0x80038900
 /*
  * Offset 0x8003892C
@@ -323,6 +346,8 @@ long /*$ra*/ LOAD_lzrw1_decompress(unsigned long src_len /*$a0*/, long overBuffe
     unsigned long len; // $a0
     long remainingBytes; // $v0
     unsigned char *p; // $v1
+
+	return 0;
 } // line 62, offset 0x80038a14
 /*
  * Offset 0x80038A1C
