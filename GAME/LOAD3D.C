@@ -101,7 +101,7 @@ void LOAD_UpdateCheckSum(struct FileAccessInfo* currentQueueFile, long sectors)
  * Stack frame base $sp, size 32
  * Saved registers at offset -8: s0 s1 ra
  */
-void /*$ra*/ LOAD_DoCDReading(struct FileAccessInfo *currentQueueFile /*$s1*/)
+void /*$ra*/ LOAD_DoCDReading(struct FileAccessInfo* currentQueueFile /*$s1*/)
 { // line 1, offset 0x800377d0
     long sectorsLoaded; // $s0
     long decompressLen; // $s0
@@ -112,7 +112,7 @@ void /*$ra*/ LOAD_DoCDReading(struct FileAccessInfo *currentQueueFile /*$s1*/)
  * Stack frame base $sp, size 40
  * Saved registers at offset -8: s0 s1 ra
  */
-void /*$ra*/ LOAD_DoCDBufferedReading(struct FileAccessInfo *currentQueueFile /*$s0*/)
+void /*$ra*/ LOAD_DoCDBufferedReading(struct FileAccessInfo* currentQueueFile /*$s0*/)
 { // line 1, offset 0x80037968
     struct NonBlockLoadEntry *loadEntry; // $s1
     long actualReadSize; // $a1
@@ -124,7 +124,7 @@ void /*$ra*/ LOAD_DoCDBufferedReading(struct FileAccessInfo *currentQueueFile /*
  * Stack frame base $sp, size 24
  * Saved registers at offset -8: ra
  */
-void /*$ra*/ LOAD_SetupFileToDoCDReading(struct FileAccessInfo *currentQueueFile /*$a1*/)
+void /*$ra*/ LOAD_SetupFileToDoCDReading(struct FileAccessInfo* currentQueueFile /*$a1*/)
 { // line 1, offset 0x80037b48
     long i; // $a0
 } // line 34, offset 0x80037c1c
@@ -134,7 +134,7 @@ void /*$ra*/ LOAD_SetupFileToDoCDReading(struct FileAccessInfo *currentQueueFile
  * Stack frame base $sp, size 24
  * Saved registers at offset -8: ra
  */
-void /*$ra*/ LOAD_SetupFileToDoBufferedCDReading(struct FileAccessInfo *currentQueueFile /*$a1*/)
+void /*$ra*/ LOAD_SetupFileToDoBufferedCDReading(struct FileAccessInfo* currentQueueFile /*$a1*/)
 {
 }
 /*
@@ -189,7 +189,7 @@ long LOAD_CdReadFromBigFile(long fileOffset, unsigned long* loadAddr, unsigned l
  * Stack frame base $sp, size 80
  * Saved registers at offset -8: s0 s1 ra
  */
-void /*$ra*/ LOAD_InitCdLoader(char *bigFileName /*$s0*/, char *voiceFileName /*$a1*/)
+void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*$a1*/)
 { // line 1, offset 0x80037ef4
     CdlFILE fp; // stack offset -48
     long i; // $a0
@@ -275,7 +275,7 @@ void /*$ra*/ LOAD_InitCdLoader(char *bigFileName /*$s0*/, char *voiceFileName /*
  * Stack frame base $sp, size 64
  * Saved registers at offset -8: s0 s1 s2 s3 s4 s5 ra
  */
-long * /*$ra*/ LOAD_ReadFile(char *fileName /*$a0*/, unsigned char memType /*$s0*/)
+long * /*$ra*/ LOAD_ReadFile(char* fileName /*$a0*/, unsigned char memType /*$s0*/)
 { // line 1, offset 0x800380f0
     long bigFileIndex; // $s3
     long length; // $s1
@@ -293,7 +293,7 @@ long * /*$ra*/ LOAD_ReadFile(char *fileName /*$a0*/, unsigned char memType /*$s0
  * Stack frame base $sp, size 32
  * Saved registers at offset -4: s0 s1 s2 ra
  */
-long * /*$ra*/ LOAD_SetupNonBlockingReadFile(char *fileName /*$a0*/, unsigned char memType /*$s2*/, struct NonBlockLoadEntry *loadEntry /*$s0*/, long forceSize /*$s1*/)
+long * /*$ra*/ LOAD_SetupNonBlockingReadFile(char* fileName /*$a0*/, unsigned char memType /*$s2*/, struct NonBlockLoadEntry* loadEntry /*$s0*/, long forceSize /*$s1*/)
 { // line 1, offset 0x800381e0
     long bigFileIndex; // $a0
     long length; // $a1
@@ -323,7 +323,7 @@ long LOAD_NonBlockingReadFile(struct NonBlockLoadEntry* loadEntry)
  * Stack frame base $sp, size 32
  * Saved registers at offset -8: s0 s1 ra
  */
-long /*$ra*/ LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry *loadEntry /*$s1*/)
+long /*$ra*/ LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry* loadEntry /*$s1*/)
 { // line 1, offset 0x80038360
     struct FileAccessInfo *currentQueueReq; // $s0
     long oldQueueReqIndex; // $s0
@@ -346,7 +346,7 @@ int /*$ra*/ LOAD_IsFileLoading(long fileId /*$s0*/)
  * Stack frame base $sp, size 56
  * Saved registers at offset -4: s0 s1 s2 s3 s4 s5 s6 s7 fp ra
  */
-long /*$ra*/ LOAD_HashName(char *string /*stack 0*/)
+long /*$ra*/ LOAD_HashName(char* string /*stack 0*/)
 { // line 1, offset 0x80038544
     long sum; // $s5
     long xor; // $s6
@@ -365,7 +365,7 @@ long /*$ra*/ LOAD_HashName(char *string /*stack 0*/)
  * Stack frame base $sp, size 24
  * Saved registers at offset -8: ra
  */
-long /*$ra*/ LOAD_GetBigFileFileIndex(char *fileName /*$a0*/)
+long /*$ra*/ LOAD_GetBigFileFileIndex(char* fileName /*$a0*/)
 { // line 1, offset 0x80038694
     long hash; // $a2
     long bigFileIndex; // $v1
@@ -377,7 +377,7 @@ long /*$ra*/ LOAD_GetBigFileFileIndex(char *fileName /*$a0*/)
  * Stack frame base $sp, size 24
  * Saved registers at offset -4: s0 ra
  */
-long /*$ra*/ LOAD_DoesFileExist(char *fileName /*$a0*/)
+long /*$ra*/ LOAD_DoesFileExist(char* fileName /*$a0*/)
 { // line 1, offset 0x800386f0
     long hash; // $a2
     long bigFileIndex; // $v1
@@ -390,7 +390,7 @@ long /*$ra*/ LOAD_DoesFileExist(char *fileName /*$a0*/)
  * Stack frame base $sp, size 40
  * Saved registers at offset -4: s0 s1 s2 ra
  */
-void /*$ra*/ LOAD_LoadTIM(long *addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$s2*/, long clut_x /*$a3*/, long clut_y /*stack 16*/)
+void /*$ra*/ LOAD_LoadTIM(long* addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$s2*/, long clut_x /*$a3*/, long clut_y /*stack 16*/)
 { // line 1, offset 0x80038768
     RECT rect; // stack offset -24
 } // line 18, offset 0x800387c8
@@ -415,7 +415,7 @@ void LOAD_LoadTIM2(long* addr, long x_pos, long y_pos, long width, long height)
  * Stack frame base $sp, size 48
  * Saved registers at offset -8: s0 s1 s2 s3 ra
  */
-void * /*$ra*/ LOAD_RelocBinaryData(long *data /*$s0*/)
+void * /*$ra*/ LOAD_RelocBinaryData(long* data /*$s0*/)
 { // line 1, offset 0x80038860
     long *dataAddr; // $s1
     long *lastMoveDest; // $v1
