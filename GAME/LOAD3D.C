@@ -6,6 +6,7 @@
 #include <LIBCD.H>
 #include <LIBETC.H>
 #include <LIBGPU.H>
+#include <LIBSN.H>
 #include <STDLIB.H>
 
 struct LoadStatus loadStatus;
@@ -146,17 +147,41 @@ void /*$ra*/ LOAD_ProcessReadQueue()
 { // line 1, offset 0x80037d08
     struct FileAccessInfo *currentQueueFile; // $s0
 } // line 55, offset 0x80037de4
-/*
- * Offset 0x80037DF4
- * C:\kain2\game\LOAD3D.C (line 839)
- * Stack frame base $sp, size 40
- * Saved registers at offset -4: s0 s1 s2 s3 s4 ra
- */
-long /*$ra*/ LOAD_CdReadFromBigFile(long fileOffset /*$s1*/, unsigned long *loadAddr /*$s3*/, unsigned long *finalDest /*$s4*/, long blocks /*$s2*/, long chksumLevel /*stack 16*/, long checksum /*stack 20*/, long compressed /*stack 24*/)
-{ // line 1, offset 0x80037df4
-    struct FileAccessInfo *currentQueueReq; // $s0
-    long oldQueueReqIndex; // $s0
-	return 0;
+
+long LOAD_CdReadFromBigFile(long fileOffset, unsigned long* loadAddr, unsigned long* finalDest, long blocks, long chksumLevel, long checksum, long compressed)
+{
+    struct FileAccessInfo* currentQueueReq;
+    long oldQueueReqIndex;
+
+	currentQueueReq = &loadStatus.loadQueue[loadStatus.currentQueueReqIndex];
+	
+	if (currentQueueReq->status != 0)
+	{
+		while (currentQueueReq->status != 0)
+		{
+			LOAD_ProcessReadQueue();
+		}
+	}//loc_80037E68
+
+	CdIntToPos(loadStatus.bigFile.bigfileBaseOffset + fileOffset, &currentQueueReq->loc);
+
+	currentQueueReq->blocks = blocks;
+	currentQueueReq->dest = loadAddr;
+	currentQueueReq->finalDest = finalDest;
+	currentQueueReq->fileOffset = fileOffset;
+	currentQueueReq->status = 1;
+	currentQueueReq->checksumType = chksumLevel;
+	currentQueueReq->checksum = checksum;
+	currentQueueReq->bufferBlocks = 0;
+	currentQueueReq->compressedLen = compressed;
+
+	oldQueueReqIndex = loadStatus.currentQueueReqIndex;
+
+	loadStatus.currentQueueReqIndex = (oldQueueReqIndex + 1) & 3;
+
+	LOAD_ProcessReadQueue();
+
+	return oldQueueReqIndex;
 } // line 13, offset 0x80037e68
 /*
  * Offset 0x80037EF4
@@ -172,7 +197,78 @@ void /*$ra*/ LOAD_InitCdLoader(char *bigFileName /*$s0*/, char *voiceFileName /*
     long sizeOfContents; // $s0
     char *bigFileContents; // $s1
     unsigned char cdMode; // stack offset -24
-} // line 69, offset 0x800380dc
+
+	//s0 = bigFileName
+	//a0 = 0x80030000
+	//v0 = 0x80
+	cdMode = 0x80;
+	loadStatus.waitingForData = 0;
+
+	CdReadyCallback(LOAD_CdReadReady);
+	//a0 = LOAD_CdSeekCallback;
+	loadStatus.waitingForSeek = 0;
+	CdSyncCallback(LOAD_CdSeekCallback);
+	CdDataCallback(LOAD_CdDataReady);
+	
+	if (CdSearchFile(&fp, bigFileName) == NULL)
+	{
+		return;
+	}
+
+	CdControl(0xE, &cdMode, NULL);
+	loadStatus.bigFile.bigfileBaseOffset = CdPosToInt(&fp.pos);
+
+	//loc_80037F78
+	for (i = 0; i < 4; i++)
+	{
+		loadStatus.loadQueue[i].status = 0;
+	}
+
+	loadStatus.currentQueueFile = &loadStatus.loadQueue[0];
+	loadStatus.currentQueueFileIndex = 0;
+	loadStatus.currentQueueReqIndex = 0;
+
+	bigFileContents = MEMPACK_Malloc(4096, 8);
+
+	fileId = LOAD_CdReadFromBigFile(0, bigFileContents, bigFileContents, 1, 0, 0, 0);
+
+	sizeof(struct FileAccessInfo);
+	//v1 = loadStatus.loadQueue[fileId]
+	//v0 = loadStatus.loadQueue[fileId].status
+	//s0 = v1
+	if (loadStatus.loadQueue[fileId].status != 0)
+	{
+		while (loadStatus.loadQueue[fileId].status != 0)
+		{
+			LOAD_ProcessReadQueue();
+		}
+	}//loc_80038014
+	loadStatus.bigFile.numFiles = ((long*)bigFileContents)[0];
+	MEMPACK_Free(bigFileContents);
+	//v1 = loadStatus.bigFile.numFiles;
+	//a1 = 8;
+	//v0 = ((loadStatus.bigFile.numFiles << 1) + loadStatus.bigFile.numFiles) << 3;
+	sizeOfContents = ((loadStatus.bigFile.numFiles << 1) + loadStatus.bigFile.numFiles) << 3;
+	sizeOfContents = ((sizeOfContents & 0x7FF) >> 11) << 11;
+
+	loadStatus.bigFile.contents = MEMPACK_Malloc(sizeOfContents);
+	if (loadStatus.bigFile.contents == NULL)
+	{
+		PSYQpause();
+	}
+	//loc_80038064
+	fileId = LOAD_CdReadFromBigFile(0, loadStatus.bigFile.contents, loadStatus.bigFile.contents, sizeOfContents >> 11, 0, 0, 0);
+	loadStatus.bigFile.contents = &((long*)loadStatus.bigFile.contents)[1];
+
+	if (loadStatus.loadQueue[fileId].status != 0)
+	{
+		while (loadStatus.loadQueue[fileId].status != 0);
+			LOAD_ProcessReadQueue();
+
+	}
+	//loc_800380DC
+}
+
 /*
  * Offset 0x800380F0
  * C:\kain2\game\LOAD3D.C (line 945)
@@ -349,13 +445,33 @@ long /*$ra*/ LOAD_lzrw1_decompress(unsigned long src_len /*$a0*/, long overBuffe
 
 	return 0;
 } // line 62, offset 0x80038a14
-/*
- * Offset 0x80038A1C
- * C:\kain2\game\LOAD3D.C (line 1441)
- * Stack frame base $sp, size 32
- * Saved registers at offset -4: s0 s1 s2 ra
- */
-void /*$ra*/ LOAD_LoadingScreen(long fileId /*$s0*/)
-{ // line 1, offset 0x80038a1c
-    long loopFlag; // $v0
-} // line 39, offset 0x80038abc
+
+void LOAD_LoadingScreen(long fileId)
+{
+    long loopFlag;
+
+	if (fileId == -1)
+	{
+		loopFlag = 1;
+	}
+	else
+	{
+		loopFlag = 0 < loadStatus.loadQueue[fileId].status ? 1 : 0;
+	}
+
+	//loc_80038A70
+	if (loopFlag != 0)
+	{
+		while (loopFlag != 0)
+		{
+			loopFlag = 0;
+			if (fileId != -1)
+			{
+				LOAD_ProcessReadQueue();
+				loopFlag = 0 < loadStatus.loadQueue[fileId].status ? 1 : 0;
+			}
+		}
+	}
+
+	DrawSync(0);
+}
