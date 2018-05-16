@@ -1,10 +1,17 @@
+#include "MAIN.H"
+
+#include "G2TYPES.H"
+
+static struct _G2AppDataVM_Type _appDataVM;
+
 int main()
 {
-	ClearBss();
+	//ClearBss();
 	MainG2(&_appDataVM);
+	return 0;//@check
 }
 
 enum _G2Bool_Enum MainG2_UpdateLoop()
 {
-	return (_G2Bool_Enum)1;
+	return (enum _G2Bool_Enum)1;
 }
