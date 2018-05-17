@@ -191,12 +191,12 @@ long LOAD_CdReadFromBigFile(long fileOffset, unsigned long* loadAddr, unsigned l
  */
 void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*$a1*/)
 { // line 1, offset 0x80037ef4
-    CdlFILE fp; // stack offset -48
-    long i; // $a0
-    long fileId; // $a0
-    long sizeOfContents; // $s0
-    char *bigFileContents; // $s1
-    unsigned char cdMode; // stack offset -24
+	CdlFILE fp; // stack offset -48
+	long i; // $a0
+	long fileId; // $a0
+	long sizeOfContents; // $s0
+	char *bigFileContents; // $s1
+	unsigned char cdMode; // stack offset -24
 
 	//s0 = bigFileName
 	//a0 = 0x80030000
@@ -209,7 +209,7 @@ void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*
 	loadStatus.waitingForSeek = 0;
 	CdSyncCallback(LOAD_CdSeekCallback);
 	CdDataCallback(LOAD_CdDataReady);
-	
+
 	if (CdSearchFile(&fp, bigFileName) == NULL)
 	{
 		return;
@@ -263,30 +263,45 @@ void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*
 	if (loadStatus.loadQueue[fileId].status != 0)
 	{
 		while (loadStatus.loadQueue[fileId].status != 0);
+		{
 			LOAD_ProcessReadQueue();
-
+		}
 	}
 	//loc_800380DC
 }
 
-/*
- * Offset 0x800380F0
- * C:\kain2\game\LOAD3D.C (line 945)
- * Stack frame base $sp, size 64
- * Saved registers at offset -8: s0 s1 s2 s3 s4 s5 ra
- */
-long * /*$ra*/ LOAD_ReadFile(char* fileName /*$a0*/, unsigned char memType /*$s0*/)
-{ // line 1, offset 0x800380f0
-    long bigFileIndex; // $s3
-    long length; // $s1
-    long checksum; // $v1
-    long compressed; // $s5
-    long compressedLength; // $s4
-    char *finalDest; // $s0
-    struct BigFileFileInfo *fileInfo; // $s2
+long* LOAD_ReadFile(char* fileName, unsigned char memType)
+{
+	long bigFileIndex;
+	long length;
+	long checksum;
+	long compressed;
+	long compressedLength;
+	char* finalDest;
+	struct BigFileFileInfo* fileInfo;
 
-	return NULL;
-} // line 23, offset 0x80038158
+	bigFileIndex = LOAD_GetBigFileFileIndex(fileName);
+	fileInfo = &loadStatus.bigFile.contents[bigFileIndex];
+	length = (fileInfo->fileLen + 0x7FF) >> 11;
+
+	if (fileInfo->compressedLen != 0)
+	{
+		length++;
+		compressedLength = (fileInfo->compressedLen + 0x7FF) >> 11;
+	}
+	else
+	{
+		//loc_80038154
+		compressedLength = length;
+	}
+
+	//loc_80038158
+	finalDest = MEMPACK_Malloc(length << 11, memType);
+	LOAD_LoadingScreen(LOAD_CdReadFromBigFile(fileInfo->filePos >> 11, &finalDest[(length - compressedLength) << 11], finalDest, compressedLength, 1, loadStatus.bigFile.contents[bigFileIndex].checkSumFull, compressed));
+
+	return finalDest;
+}
+
 /*
  * Offset 0x800381E0
  * C:\kain2\game\LOAD3D.C (line 992)
