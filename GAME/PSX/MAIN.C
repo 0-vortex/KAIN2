@@ -1,7 +1,12 @@
 #include "G2TYPES.H"
 
 #include "LOAD3D.H"
+#include "MAING2.H"
+#include "MAINVM.H"
 
+#include <LIBETC.H>
+#include <LIBGPU.H>
+#include <LIBAPI.H>
 #include <LIBGPU.H>
 #include <STDDEF.H>
 
@@ -97,14 +102,14 @@ void /*$ra*/ ProcessArgs(char *argFileName /*$a0*/, char *baseAreaName /*$s3*/, 
 	char worldName[32]; // stack offset -56
 	long *argData; // $s1
 } // line 188, offset 0x80038d98
-  /*
-  * Offset 0x80038DB4
-  * C:\kain2\game\PSX\MAIN.C (line 410)
-  * Stack frame base $sp, size 24
-  * Saved registers at offset -8: ra
-  */
-void /*$ra*/ ClearDisplay()
+
+void ClearDisplay()
 {
+	PutDrawEnv(&draw[gameTrackerX.dispPage]);
+	DrawPrim(&clearRect);
+	DrawSync(0);
+	PutDispEnv(disp[gameTrackerX.dispPage]);
+	SetDispMask(1);
 }
 /*
 * Offset 0x80038E38
@@ -282,32 +287,21 @@ int /*$ra*/ MainG2(void* appData /*$s6*/)
 	long menuPos; // $s2
 
 	menuPos = 0;
-
 	CheckForDevStation();
 	mainOptionsInit = 0;
 
 	if (MainG2_InitEngine(appData, 512, 240, menuPos) != 0)
 	{
 		MEMPACK_Init();
-		//s4 = 7;
 		LOAD_InitCd();
-		//s3= 3;
 		LOAD_InitCdLoader("\\BIGFILE.DAT;1", "");
 
 		GAMELOOP_SystemInit(&gameTrackerX);
-		//a0 = "\\kain2\\game\\psx\\kain2.arg"
-		//a1 = "under1"
-		//a2 = &gameTrackerX
 		gameTrackerX.lastLvl = 255;
 		gameTrackerX.currentLvl = 255;
-		//v0 = &disp[0];
 		gameTrackerX.disp = &disp[0];
 		InitMainTracker(mainTracker);
-		//s5 = 2;
-		//v0 = mainTracker.mainState;
-		//v1 = v0 - 1;
 		mainTracker->previousState = mainTracker->mainState;
-		//v0 = (mainTracker.mainState - 1) < 0xF ? 1 : 0
 
 		while (!mainTracker->done)
 		{
