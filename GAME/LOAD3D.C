@@ -232,10 +232,6 @@ void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*
 
 	fileId = LOAD_CdReadFromBigFile(0, bigFileContents, bigFileContents, 1, 0, 0, 0);
 
-	sizeof(struct FileAccessInfo);
-	//v1 = loadStatus.loadQueue[fileId]
-	//v0 = loadStatus.loadQueue[fileId].status
-	//s0 = v1
 	if (loadStatus.loadQueue[fileId].status != 0)
 	{
 		while (loadStatus.loadQueue[fileId].status != 0)
@@ -332,17 +328,47 @@ long LOAD_NonBlockingReadFile(struct NonBlockLoadEntry* loadEntry)
 	return LOAD_CdReadFromBigFile(loadEntry->filePos, loadEntry->loadAddr, loadEntry->finalDest, loadEntry->compressedLength, loadEntry->checksumType, loadEntry->checksum, loadEntry->compressed);
 }
 
-/*
- * Offset 0x80038360
- * C:\kain2\game\LOAD3D.C (line 1059)
- * Stack frame base $sp, size 32
- * Saved registers at offset -8: s0 s1 ra
- */
-long /*$ra*/ LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry* loadEntry /*$s1*/)
-{ // line 1, offset 0x80038360
-    struct FileAccessInfo *currentQueueReq; // $s0
-    long oldQueueReqIndex; // $s0
-	return 0;
+long LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry* loadEntry)
+{
+    struct FileAccessInfo* currentQueueReq;
+    long oldQueueReqIndex;
+
+	currentQueueReq = &loadStatus.loadQueue[loadStatus.currentQueueReqIndex];
+	if (currentQueueReq->status != 0)
+	{
+		//loc_800383A4
+		while (currentQueueReq->status != 0)
+		{
+			LOAD_ProcessReadQueue();
+		}
+	}
+
+	//loc_800383BC
+	CdIntToPos(loadStatus.bigFile.bigfileBaseOffset + loadEntry->filePos, &currentQueueReq->loc);
+	currentQueueReq->blocks = loadEntry->compressedLength;
+	currentQueueReq->dest = loadEntry->finalDest;
+	currentQueueReq->finalDest = loadEntry->finalDest;
+	currentQueueReq->status = 5;
+	currentQueueReq->checksumType = 0;
+	currentQueueReq->fileOffset = loadEntry->filePos;
+	currentQueueReq->checksum = loadEntry->checksum;
+	currentQueueReq->compressedLen = loadEntry->compressed;
+	currentQueueReq->curBufferOffset = 0;
+	currentQueueReq->bufferBlocks = loadEntry->bufferSize >> 11;
+	currentQueueReq->buffer1 = loadEntry->finalDest;
+	currentQueueReq->bufferFlags = 0;
+	currentQueueReq->buffer2 = loadEntry->finalDest2;
+	currentQueueReq->retFunc = loadEntry->retFunc;
+	currentQueueReq->retData = loadEntry->retData;
+	currentQueueReq->loadEntry = loadEntry;
+	currentQueueReq->retData2 = loadEntry->retData2;
+
+	oldQueueReqIndex = loadStatus.currentQueueReqIndex;
+	loadStatus.currentQueueReqIndex = (oldQueueReqIndex + 1) & 3;
+
+	LOAD_ProcessReadQueue();
+
+	return oldQueueReqIndex;
 } // line 13, offset 0x800383bc
 /*
  * Offset 0x800384A0
