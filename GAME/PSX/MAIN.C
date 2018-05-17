@@ -121,15 +121,17 @@ void /*$ra*/ InitDisplay(int w /*$s2*/, int h /*$s0*/)
 { // line 1, offset 0x80038e38
 	RECT r; // stack offset -32
 } // line 16, offset 0x80038f0c
-  /*
-  * Offset 0x80039008
-  * C:\kain2\game\PSX\MAIN.C (line 481)
-  * Stack frame base $sp, size 24
-  * Saved registers at offset -8: ra
-  */
-void /*$ra*/ StartTimer()
+
+void StartTimer()
 {
+	EnterCriticalSection();
+	__timerEvent = OpenEvent(0xF2000000, 2, 0x1000, TimerTick);
+	EnableEvent(__timerEvent);
+	SetRCnt(0xF2000000, 0xFFFF, 0x1001);
+	StartRCnt(0xF2000000);
+	ExitCriticalSection();
 }
+
 /*
 * Offset 0x80039074
 * C:\kain2\game\PSX\MAIN.C (line 508)
