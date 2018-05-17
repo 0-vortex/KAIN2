@@ -369,18 +369,36 @@ long LOAD_CD_ReadPartOfFile(struct NonBlockLoadEntry* loadEntry)
 	LOAD_ProcessReadQueue();
 
 	return oldQueueReqIndex;
-} // line 13, offset 0x800383bc
-/*
- * Offset 0x800384A0
- * C:\kain2\game\LOAD3D.C (line 1100)
- * Stack frame base $sp, size 24
- * Saved registers at offset -4: s0 ra
- */
-int /*$ra*/ LOAD_IsFileLoading(long fileId /*$s0*/)
-{ // line 1, offset 0x800384a0
-    long loopFlag; // $v0
-	return 0;
-} // line 28, offset 0x80038534
+}
+
+int LOAD_IsFileLoading(long fileId /*$s0*/)
+{
+	long loopFlag;
+
+	loopFlag = -1;
+
+	if (fileId == loopFlag)
+	{
+		loopFlag = 1;
+	}
+	else
+	{
+		//loc_800384C0
+		loopFlag = 0 < loadStatus.loadQueue[fileId].status ? 1 : 0;
+	}
+
+	if (loopFlag != 0)
+	{
+		loopFlag = 0;
+		if (fileId != -1)
+		{
+			LOAD_ProcessReadQueue();
+			loopFlag = 0 < loadStatus.loadQueue[fileId].status ? 1 : 0;
+		}//loc_80038534
+	}//loc_80038534
+
+	return loopFlag;
+}
 /*
  * Offset 0x80038544
  * C:\kain2\game\LOAD3D.C (line 1141)
