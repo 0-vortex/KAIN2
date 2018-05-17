@@ -453,16 +453,35 @@ long /*$ra*/ LOAD_DoesFileExist(char* fileName /*$a0*/)
     long result; // $s0
 	return 0;
 } // line 18, offset 0x80038754
-/*
- * Offset 0x80038768
- * C:\kain2\game\LOAD3D.C (line 1238)
- * Stack frame base $sp, size 40
- * Saved registers at offset -4: s0 s1 s2 ra
- */
-void /*$ra*/ LOAD_LoadTIM(long* addr /*$s0*/, long x_pos /*$s1*/, long y_pos /*$s2*/, long clut_x /*$a3*/, long clut_y /*stack 16*/)
-{ // line 1, offset 0x80038768
-    RECT rect; // stack offset -24
-} // line 18, offset 0x800387c8
+
+void LOAD_LoadTIM(long* addr, long x_pos, long y_pos, long clut_x, long clut_y)
+{
+    RECT rect;
+
+	addr = &addr[2];
+
+	if (addr[-1] == 8)
+	{
+		rect.x = clut_x;
+		rect.y = clut_y;
+		rect.w = 16;
+		rect.h = 1;
+		DrawSync(0);
+
+		LoadImage(&rect, (u_long*)&addr[3]);
+		addr = &addr[11];
+	}
+
+	//loc_800387C8:
+	rect.x = x_pos;
+	rect.y = y_pos;
+	rect.w = ((short*)addr)[4];
+	rect.h = ((short*)addr)[5];
+	
+	DrawSync(0);
+	LoadImage(&rect, &addr[3]);
+	DrawSync(0);
+}
 
 void LOAD_LoadTIM2(long* addr, long x_pos, long y_pos, long width, long height)
 {
