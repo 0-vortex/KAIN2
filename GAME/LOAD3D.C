@@ -138,24 +138,50 @@ void /*$ra*/ LOAD_SetupFileToDoCDReading(struct FileAccessInfo* currentQueueFile
 void /*$ra*/ LOAD_SetupFileToDoBufferedCDReading(struct FileAccessInfo* currentQueueFile /*$a1*/)
 {
 }
-/*
- * Offset 0x80037D08
- * C:\kain2\game\LOAD3D.C (line 782)
- * Stack frame base $sp, size 24
- * Saved registers at offset -4: s0 ra
- */
-void /*$ra*/ LOAD_ProcessReadQueue()
-{ // line 1, offset 0x80037d08
-    struct FileAccessInfo *currentQueueFile; // $s0
-} // line 55, offset 0x80037de4
+
+void LOAD_ProcessReadQueue()
+{
+	struct FileAccessInfo* currentQueueFile = loadStatus.currentQueueFile;
+
+	if (currentQueueFile->status == 3)
+	{
+		LOAD_DoCDReading(currentQueueFile);
+	}
+	else if (currentQueueFile->status == 6)
+	{
+		LOAD_DoCDBufferedReading(currentQueueFile);
+	}
+	else if (currentQueueFile->status == 1)
+	{
+		LOAD_SetupFileToDoCDReading(currentQueueFile);
+	}
+	else if (currentQueueFile->status == 5)
+	{
+		LOAD_SetupFileToDoBufferedCDReading(currentQueueFile);
+	}
+
+	//loc_80037D90
+	if (currentQueueFile->status == 4)
+	{
+		//loc_80037DE0
+		currentQueueFile->status = 1;
+	}
+	else if (currentQueueFile->status == 3 || currentQueueFile->status == 6)
+	{
+		if (0x401640 < TIMER_TimeDiff2(loadStatus.cdWaitTime))
+		{
+			currentQueueFile->status = 1;
+		}
+	}
+}
 
 long LOAD_CdReadFromBigFile(long fileOffset, unsigned long* loadAddr, unsigned long* finalDest, long blocks, long chksumLevel, long checksum, long compressed)
 {
-    struct FileAccessInfo* currentQueueReq;
-    long oldQueueReqIndex;
+	struct FileAccessInfo* currentQueueReq;
+	long oldQueueReqIndex;
 
 	currentQueueReq = &loadStatus.loadQueue[loadStatus.currentQueueReqIndex];
-	
+
 	if (currentQueueReq->status != 0)
 	{
 		while (currentQueueReq->status != 0)
@@ -183,7 +209,8 @@ long LOAD_CdReadFromBigFile(long fileOffset, unsigned long* loadAddr, unsigned l
 	LOAD_ProcessReadQueue();
 
 	return oldQueueReqIndex;
-} // line 13, offset 0x80037e68
+}
+
 /*
  * Offset 0x80037EF4
  * C:\kain2\game\LOAD3D.C (line 874)
