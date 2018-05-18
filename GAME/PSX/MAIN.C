@@ -194,15 +194,10 @@ void MAIN_ShowLoadingScreen()
 	}
 }
 
-  /*
-  * Offset 0x8003936C
-  * C:\kain2\game\PSX\MAIN.C (line 658)
-  * Stack frame base $sp, size 24
-  * Saved registers at offset -8: ra
-  */
-long * /*$ra*/ MAIN_LoadTim(char *name /*$a0*/)
-{ // line 1, offset 0x8003936c
-} // line 1, offset 0x8003936c
+long* MAIN_LoadTim(char* name)
+{
+	LOAD_ReadFile(name, 0xB);
+}
   /*
   * Offset 0x8003938C
   * C:\kain2\game\PSX\MAIN.C (line 667)
