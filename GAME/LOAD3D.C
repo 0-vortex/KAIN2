@@ -1,5 +1,6 @@
 #include "LOAD3D.H"
 
+#include "MEMPACK.H"
 #include "G2TYPES.H"
 
 #include <SYS\TYPES.H>
@@ -230,7 +231,7 @@ void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*
 
 	bigFileContents = MEMPACK_Malloc(4096, 8);
 
-	fileId = LOAD_CdReadFromBigFile(0, bigFileContents, bigFileContents, 1, 0, 0, 0);
+	fileId = LOAD_CdReadFromBigFile(0, (unsigned long*)bigFileContents, (unsigned long*)bigFileContents, 1, 0, 0, 0);
 
 	if (loadStatus.loadQueue[fileId].status != 0)
 	{
@@ -247,13 +248,13 @@ void /*$ra*/ LOAD_InitCdLoader(char* bigFileName /*$s0*/, char* voiceFileName /*
 	sizeOfContents = ((loadStatus.bigFile.numFiles << 1) + loadStatus.bigFile.numFiles) << 3;
 	sizeOfContents = ((sizeOfContents & 0x7FF) >> 11) << 11;
 
-	loadStatus.bigFile.contents = MEMPACK_Malloc(sizeOfContents);
+	loadStatus.bigFile.contents = (struct BigFileFileInfo*)MEMPACK_Malloc(sizeOfContents);
 	if (loadStatus.bigFile.contents == NULL)
 	{
 		PSYQpause();
 	}
 	//loc_80038064
-	fileId = LOAD_CdReadFromBigFile(0, loadStatus.bigFile.contents, loadStatus.bigFile.contents, sizeOfContents >> 11, 0, 0, 0);
+	fileId = LOAD_CdReadFromBigFile(0, (unsigned long*)loadStatus.bigFile.contents, (unsigned long*)loadStatus.bigFile.contents, sizeOfContents >> 11, 0, 0, 0);
 	loadStatus.bigFile.contents = &((long*)loadStatus.bigFile.contents)[1];
 
 	if (loadStatus.loadQueue[fileId].status != 0)
@@ -295,7 +296,7 @@ long* LOAD_ReadFile(char* fileName, unsigned char memType)
 	finalDest = MEMPACK_Malloc(length << 11, memType);
 	LOAD_LoadingScreen(LOAD_CdReadFromBigFile(fileInfo->filePos >> 11, &finalDest[(length - compressedLength) << 11], finalDest, compressedLength, 1, loadStatus.bigFile.contents[bigFileIndex].checkSumFull, compressed));
 
-	return finalDest;
+	return (long*)finalDest;
 }
 
 /*
@@ -315,12 +316,7 @@ long * /*$ra*/ LOAD_SetupNonBlockingReadFile(char* fileName /*$a0*/, unsigned ch
 
 	return NULL;
 } // line 44, offset 0x800382bc
-/*
- * Offset 0x800382D8
- * C:\kain2\game\LOAD3D.C (line 1040)
- * Stack frame base $sp, size 40
- * Saved registers at offset -4: s0 ra
- */
+
 long LOAD_NonBlockingReadFile(struct NonBlockLoadEntry* loadEntry)
 {
 	///loadEntry->finalDest = MEMPACK_Malloc(loadEntry->mallocedSize, loadEntry->memType);
@@ -514,25 +510,75 @@ void * /*$ra*/ LOAD_RelocBinaryData(long* data /*$s0*/)
 
 	return NULL;
 } // line 21, offset 0x80038900
-/*
- * Offset 0x8003892C
- * C:\kain2\game\LOAD3D.C (line 1346)
- * Stack frame base $sp, size 0
- */
-long /*$ra*/ LOAD_lzrw1_decompress(unsigned long src_len /*$a0*/, long overBufferTolerance /*$a1*/)
-{ // line 2, offset 0x8003892c
-    unsigned char *p_src; // $a2
-    unsigned char *p_dst; // $a3
+
+long LOAD_lzrw1_decompress(unsigned long src_len, long overBufferTolerance)
+{
+    unsigned char* p_src; // $a2
+    unsigned char* p_dst; // $a3
     unsigned long controlbits; // $t1
     unsigned long control; // $t0
-    unsigned char *p_src_post; // $t3
+    unsigned char* p_src_post; // $t3
     unsigned long offset; // $v0
     unsigned long len; // $a0
     long remainingBytes; // $v0
-    unsigned char *p; // $v1
+    unsigned char* p; // $v1
 
-	return 0;
-} // line 62, offset 0x80038a14
+	p_src = loadStatus.compSrcAddr;
+	p_dst = loadStatus.compDstAddr;
+	controlbits = loadStatus.compControlbits;
+	control = loadStatus.compControl;
+	p_src_post = &p_src[len];
+	p = p_src_post - overBufferTolerance;
+	offset = p_src_post - p_src;
+
+	if (p_src > p)
+	{
+		//loc_80038958
+		while (p > p_src)
+		{
+			if (controlbits == 0)
+			{
+				control = *p_src++ | (*p_src++ << 8);
+				controlbits = 16;
+			}
+
+			if ((control & 1))
+			{
+				//loc_80038980
+				len = *p_src++;
+				p = p_dst - ((len & 0xF0) << 4) + *p_src++;
+				if ((len & 0xF) != -1)
+				{
+					//loc_800389B4
+					while (len-- != -1)
+					{
+						*p_dst++ = *p++;
+					}
+				}//loc_800389E4
+			}
+			else
+			{
+				//loc_800389D4
+				*p_dst++ = *p_src++;
+			}
+
+			//loc_800389E4
+			control >>= 1;
+
+			//loc_800389E8
+			controlbits--;
+		}
+
+		remainingBytes = p_src_post - p_src;
+	}//loc_800389F8
+
+	loadStatus.compSrcAddr = p_src;
+	loadStatus.compDstAddr = p_dst;
+	loadStatus.compControlbits = controlbits;
+	loadStatus.compControl = control;
+
+	return remainingBytes > 0 ? remainingBytes : 0;
+}
 
 void LOAD_LoadingScreen(long fileId)
 {
