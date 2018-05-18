@@ -198,14 +198,33 @@ long* MAIN_LoadTim(char* name)
 {
 	LOAD_ReadFile(name, 0xB);
 }
-  /*
-  * Offset 0x8003938C
-  * C:\kain2\game\PSX\MAIN.C (line 667)
-  * Stack frame base $sp, size 24
-  * Saved registers at offset -8: ra
-  */
-void /*$ra*/ MAIN_DoMainInit()
+
+void MAIN_DoMainInit()
 {
+	InitDisplay(512, 240);
+	InitGeom();
+	SetGeomOffset(256, 120);
+	SetGeomScreen(320);
+	VRAM_InitVramBlockCache();
+	FONT_Init();
+	StartTimer();
+	gameTrackerX.reqDisp = NULL;
+	VSyncCallback(VblTick);
+	DrawSyncCallback(DrawCallback);
+	GAMEPAD_Init();
+	SOUND_Init();
+	VOICEXA_Init();
+
+	if (nosound != 0)
+	{
+		SOUND_SfxOff();
+		SOUND_MusicOff();
+		gameTrackerX.sound.gSfxOn = 0;
+		gameTrackerX.sound.gMusicOn = 0;
+		gameTrackerX.sound.gVoiceOn = 0;
+	}
+	//loc_80039434
+	srand(0);
 }
 /*
 * Offset 0x8003944C
