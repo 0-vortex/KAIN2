@@ -463,19 +463,34 @@ long LOAD_GetBigFileFileIndex(char* fileName)
 	return bigFileIndex;
 }
 
-/*
- * Offset 0x800386F0
- * C:\kain2\game\LOAD3D.C (line 1215)
- * Stack frame base $sp, size 24
- * Saved registers at offset -4: s0 ra
- */
-long /*$ra*/ LOAD_DoesFileExist(char* fileName /*$a0*/)
-{ // line 1, offset 0x800386f0
-    long hash; // $a2
-    long bigFileIndex; // $v1
-    long result; // $s0
-	return 0;
-} // line 18, offset 0x80038754
+long LOAD_DoesFileExist(char* fileName)
+{
+	long hash;
+	long bigFileIndex;
+	long result;
+
+	result = 1;
+	hash = LOAD_HashName(fileName);
+	bigFileIndex = 0;
+
+	if (loadStatus.bigFile.numFiles > 0)
+	{
+		//loc_8003871C
+		for (; bigFileIndex < loadStatus.bigFile.numFiles; bigFileIndex++)
+		{
+			if (loadStatus.bigFile.contents[0].fileHash == hash)
+				break;
+		}
+	}
+
+	//loc_80038740
+	if (bigFileIndex == loadStatus.bigFile.numFiles)
+	{
+		result = 0;
+	}
+
+	return result;
+}
 
 void LOAD_LoadTIM(long* addr, long x_pos, long y_pos, long clut_x, long clut_y)
 {
