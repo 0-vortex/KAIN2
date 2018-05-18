@@ -3,6 +3,7 @@
 #include "LOAD3D.H"
 #include "MAING2.H"
 #include "MAINVM.H"
+#include "MEMPACK.H"
 
 #include <LIBETC.H>
 #include <LIBGPU.H>
@@ -12,6 +13,7 @@
 
 void DoCinematicStuff(struct GameTracker* gameTracker, struct MainTracker* mainTracker)
 {
+	return;
 }
 
 void InitMainTracker(struct MainTracker* mainTracker)
@@ -132,12 +134,6 @@ void StartTimer()
 	ExitCriticalSection();
 }
 
-/*
-* Offset 0x80039074
-* C:\kain2\game\PSX\MAIN.C (line 508)
-* Stack frame base $sp, size 24
-* Saved registers at offset -8: ra
-*/
 void /*$ra*/ VblTick()
 {
 }
@@ -183,16 +179,21 @@ void CheckForDevStation()
 		devstation = 1;
 	}
 }
-  /*
-  * Offset 0x80039308
-  * C:\kain2\game\PSX\MAIN.C (line 634)
-  * Stack frame base $sp, size 32
-  * Saved registers at offset -4: s0 ra
-  */
-void /*$ra*/ MAIN_ShowLoadingScreen()
-{ // line 1, offset 0x80039308
-	long *loadingScreen; // $s0
-} // line 13, offset 0x8003935c
+
+void MAIN_ShowLoadingScreen()
+{
+	long* loadingScreen;
+
+	VSync(0);
+
+	loadingScreen = LOAD_ReadFile("\\kain2\\game\\psx\\loading.tim", 0xB);
+	if (loadingScreen != NULL)
+	{
+		LOAD_LoadTIM2(loadingScreen, 0, gameTrackerX.dispPage << 8, 512, 256);
+		MEMPACK_Free((char*)loadingScreen);
+	}
+}
+
   /*
   * Offset 0x8003936C
   * C:\kain2\game\PSX\MAIN.C (line 658)
@@ -385,7 +386,7 @@ int /*$ra*/ MainG2(void* appData /*$s6*/)
 				{
 					aadInitVolume();
 					aadStartMasterVolumeFade(gameTrackerX.sound.gMasterVol, 256, 0);
-					gameTrackerX.sounds.soundsLoaded = 1;
+					gameTrackerX.sound.soundsLoaded = 1;
 					aadSetNoUpdateMode(0);
 				}//loc_80039EB0
 
