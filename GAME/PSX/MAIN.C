@@ -226,16 +226,19 @@ void MAIN_DoMainInit()
 	//loc_80039434
 	srand(0);
 }
-/*
-* Offset 0x8003944C
-* C:\kain2\game\PSX\MAIN.C (line 699)
-* Stack frame base $sp, size 40
-* Saved registers at offset -8: s0 s1 ra
-*/
-void /*$ra*/ MAIN_ShowPalWarningScreen(struct GameTracker *gameTracker /*$s1*/)
-{ // line 1, offset 0x8003944c
-	long *warningScreen; // $s0
-} // line 10, offset 0x8003949c
+
+void MAIN_ShowPalWarningScreen(struct GameTracker* gameTracker)
+{
+	long* warningScreen;
+	warningScreen = LOAD_ReadFile("\\kain2\\game\\psx\\warning.tim", 0xB);
+
+	if (warningScreen != NULL)
+	{
+		LOAD_LoadTIM(warningScreen, 0, gameTracker->dispPage << 8, 0, 0);
+		MEMPACK_Free(warningScreen);
+	}
+}
+
   /*
   * Offset 0x800394B0
   * C:\kain2\game\PSX\MAIN.C (line 711)
