@@ -9,6 +9,7 @@
 #include <LIBGPU.H>
 #include <LIBSN.H>
 #include <STDLIB.H>
+#include <STDIO.H>
 
 struct LoadStatus loadStatus;
 
@@ -128,6 +129,8 @@ void /*$ra*/ LOAD_DoCDBufferedReading(struct FileAccessInfo* currentQueueFile /*
 void /*$ra*/ LOAD_SetupFileToDoCDReading(struct FileAccessInfo* currentQueueFile /*$a1*/)
 { // line 1, offset 0x80037b48
     long i; // $a0
+
+
 } // line 34, offset 0x80037c1c
 /*
  * Offset 0x80037C68
@@ -422,25 +425,69 @@ int LOAD_IsFileLoading(long fileId /*$s0*/)
 
 	return loopFlag;
 }
-/*
- * Offset 0x80038544
- * C:\kain2\game\LOAD3D.C (line 1141)
- * Stack frame base $sp, size 56
- * Saved registers at offset -4: s0 s1 s2 s3 s4 s5 s6 s7 fp ra
- */
-long /*$ra*/ LOAD_HashName(char* string /*stack 0*/)
-{ // line 1, offset 0x80038544
-    long sum; // $s5
-    long xor; // $s6
-    long length; // $s4
-    long ext; // $s7
-    char c; // $v1
-    long strl; // $s2
-    long endPos; // $fp
-    long i; // $s0
-    char *pos; // $s3
-	return 0;
-} // line 41, offset 0x8003864c
+
+long LOAD_HashName(char* string)
+{
+	long sum;
+	long xor;
+	long length;
+	long ext;
+	char c;
+	long strl;
+	long endPos;
+	long i;
+	char* pos;
+
+	sum = 0;
+	xor = 0;
+	length = 0;
+	ext = 0;
+
+	strl = strlen(string) - 1;
+	pos = strchr(string, '.');
+
+	endPos = 0;
+	if (pos++ != NULL)
+	{
+		//loc_800385B4
+		for (i = 0; i < 7; i++)
+		{
+			if (strcmpi(pos, &HashExtensions[i][0]) == 0)
+			{
+				ext = i;
+				break;
+			}
+		}
+
+		//loc_800385E0
+		if (i < 7)
+		{
+			strl -= 4;
+		}
+	}
+	//loc_800385F0
+	if (strl > endPos)
+	{
+		while (strl > endPos)
+		{
+			//loc_800385FC
+			c = string[strl];
+
+			if ((c - 0x61) < 0x1A)
+			{
+				c &= 0xDF;
+			}
+			//loc_80038624
+			c -= 0x1A;
+			sum += (c & 0xFF);
+			strl--;
+			length++;
+			xor ^= (c & 0xFF) * length;
+		}
+	}
+	//loc_80038650
+	return (length << 27) | (sum << 15) | (xor << 3) | ext;
+}
 
 long LOAD_GetBigFileFileIndex(char* fileName)
 {
@@ -541,14 +588,66 @@ void LOAD_LoadTIM2(long* addr, long x_pos, long y_pos, long width, long height)
  * Stack frame base $sp, size 48
  * Saved registers at offset -8: s0 s1 s2 s3 ra
  */
-void * /*$ra*/ LOAD_RelocBinaryData(long* data /*$s0*/)
-{ // line 1, offset 0x80038860
-    long *dataAddr; // $s1
-    long *lastMoveDest; // $v1
+void* LOAD_RelocBinaryData(long* data /*$s0*/)
+{
+    long* dataAddr; // $s1
+    long* lastMoveDest; // $v1
     long tableSize; // $s3
     long fileSize; // $v0
     struct RedirectList redirectListX; // stack offset -32
-    struct RedirectList *redirectList; // $a0
+    struct RedirectList* redirectList; // $a0
+
+	//a0 = &redirectListX;
+	dataAddr = data;
+	//v0 = &dataAddr[1];
+	redirectListX.data = &dataAddr[1];
+	//v1 = *dataAddr
+	fileSize = *dataAddr + 512;
+	redirectListX.numPointers = *dataAddr;
+
+	if (fileSize < 0)
+	{
+		fileSize = *dataAddr + 1023;
+	}
+
+	//loc_800388A4
+	fileSize >>= 9;
+	tableSize = fileSize << 9;
+	RESOLVE_Pointers(&redirectListX, &dataAddr[filesize << 9], dataAddr);
+	fileSize = MEMPACK_Size(dataAddr);
+
+	fileSize >>= 2;
+	fileSize -= tableSize;
+	lastMoveDest = dataAddr - fileSize;
+
+	//v0 = dataAddr < lastMoveDest ? 1 : 0;
+		sltu    $v0, $s1, $v1
+		beqz    $v0, loc_80038900
+		move    $a0, $s2
+		addu    $v0, $a0, $s0
+
+		loc_800388E4 :
+		lw      $v0, 0($v0)
+		nop
+		sw      $v0, 0($s0)
+		addiu   $s0, 4
+		sltu    $v0, $s0, $v1
+		bnez    $v0, loc_800388E4
+		addu    $v0, $a0, $s0
+
+		loc_80038900 :
+		move    $a0, $s1
+		jal     sub_8005047C
+		sll     $a1, $s3, 2
+		move    $v0, $s1
+		lw      $ra, 0x30 + var_8($sp)
+		lw      $s3, 0x30 + var_C($sp)
+		lw      $s2, 0x30 + var_10($sp)
+		lw      $s1, 0x30 + var_14($sp)
+		lw      $s0, 0x30 + var_18($sp)
+		jr      $ra
+		addiu   $sp, 0x30
+		# End of function sub_80038860
 
 	return NULL;
 } // line 21, offset 0x80038900
