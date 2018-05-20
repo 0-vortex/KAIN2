@@ -97,17 +97,71 @@ void LOAD_UpdateCheckSum(struct FileAccessInfo* currentQueueFile, long sectors)
 		}
 	}
 }
-/*
- * Offset 0x800377D0
- * C:\kain2\game\LOAD3D.C (line 489)
- * Stack frame base $sp, size 32
- * Saved registers at offset -8: s0 s1 ra
- */
-void /*$ra*/ LOAD_DoCDReading(struct FileAccessInfo* currentQueueFile /*$s1*/)
-{ // line 1, offset 0x800377d0
-    long sectorsLoaded; // $s0
-    long decompressLen; // $s0
-} // line 57, offset 0x80037954
+
+void LOAD_DoCDReading(struct FileAccessInfo* currentQueueFile /*$s1*/)
+{
+	long sectorsLoaded; // $s0
+	long decompressLen; // $s0
+
+	sectorsLoaded = 0;
+
+	if (*loadStatus.waitingSector != 0xABBA1234)
+	{
+		//loc_80037804
+		if (loadStatus.remSectors != 0)
+		{
+			while (*loadStatus.waitingSector != 0xABBA1234)
+			{
+				sectorsLoaded++;
+				loadStatus.remSectors--;
+				loadStatus.waitingSector += 512;
+			}
+		}
+		//loc_80037838
+	}
+	//loc_80037838
+	if (sectorsLoaded != 0)
+	{
+		if (currentQueueFile->checksumType != 0)
+		{
+			LOAD_UpdateCheckSum(currentQueueFile, sectorsLoaded);
+		}
+		//loc_80037858
+		if (currentQueueFile->compressedLen != 0)
+		{
+			decompressLen = (sectorsLoaded << 11) + loadStatus.compEndBytes;
+			if (loadStatus.decompressLen < decompressLen)
+			{
+				decompressLen = loadStatus.decompressLen;
+			}
+			//loc_80037884
+			loadStatus.compEndBytes = LOAD_lzrw1_decompress(decompressLen, 4);
+			loadStatus.decompressLen = (loadStatus.decompressLen + loadStatus.compEndBytes) - decompressLen;
+		}//loc_800378A4
+	}
+	//loc_800378A4
+	if (*loadStatus.waitingForData != 0xABBA1234 && loadStatus.remSectors == 0)
+	{
+		if (loadStatus.compEndBytes != 0)
+		{
+			loadStatus.compEndBytes = LOAD_lzrw1_decompress(loadStatus.compEndBytes, 1);
+		}//loc_800378E8
+
+		if (currentQueueFile->checksumType != 0 && loadStatus.checksum != currentQueueFile->checksum)
+		{
+			currentQueueFile->status = 4;
+		}
+		else
+		{
+			//loc_80037918
+			currentQueueFile->status = 0;
+		}
+	}//loc_80037954
+
+	loadStatus.waitingForData = 0;
+	loadStatus.currentQueueFile = &loadStatus.loadQueue[(++loadStatus.currentQueueFileIndex) & 3];
+}
+
 /*
  * Offset 0x80037968
  * C:\kain2\game\LOAD3D.C (line 549)
