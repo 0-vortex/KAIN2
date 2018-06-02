@@ -1,5 +1,7 @@
 #include "AADSFX.H"
 
+#include "G2TYPES.H"
+#include <LIBSPU.H>
 
 unsigned short aadStopAllSfx()
 {
@@ -33,8 +35,16 @@ unsigned short aadStopAllSlots()
 	return 0;
 }
 
-unsigned short /*$ra*/ aadShutdownReverb()
+unsigned short aadShutdownReverb()
 {
+	if (aadWaitForSramTransferComplete() != 0)
+	{
+		SpuClearReverbWorkArea(aadGetReverbMode());
+
+	}
+	
+	//loc_80054290
+	return 0;
 }
 
 unsigned short /*$ra*/ aadCancelPauseSound()
