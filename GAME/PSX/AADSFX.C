@@ -47,6 +47,8 @@ unsigned short aadShutdownReverb()
 	return 0;
 }
 
-unsigned short /*$ra*/ aadCancelPauseSound()
+unsigned short aadCancelPauseSound()
 {
+	aadMem[0].flags &= 0xFFF3;
+	return 0;
 }
